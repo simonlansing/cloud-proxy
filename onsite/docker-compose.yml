@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - SERVERURL=wireguard.${BASE_FQDN-example.com}
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=10.0.0.0
+      - ALLOWEDIPS=10.0.0.0/24
+      - LOG_CONFS=true
+    volumes:
+      - ./wireguard:/config
+      - /lib/modules:/lib/modules
+    network_mode: host
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      # Docker configuration
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.file.directory=/data
+      # Configure entrypoint
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls.certresolver=lets-encrypt
+      - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN}
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN}
+      # TLS configuration
+      - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
+      - --certificatesresolvers.lets-encrypt.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.lets-encrypt.acme.storage=/letsencrypt/acme.json
+      # Enable dashboard
+      - --api.dashboard=true
+      # Access logs
+      - --accesslog=true
+      - --accesslog.filepath=/data/logs/access.log
+      - --accesslog.bufferingsize=100
+      - --accesslog.format=json
+      # Traefik logs
+      - --log=true
+      - --log.filepath=/data/logs/traefik.log
+      - --log.level=DEBUG
+      - --log.format=json
+    expose:
+      - 80
+      - 443
+    network_mode: host
+    env_file:
+      - .env
+    volumes:  
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/:/data/
+      - letsencrypt-certs:/letsencrypt
+
+volumes:
+  letsencrypt-certs:
+

@@ -1,0 +1,45 @@
+{{ $wireguardPeers := env "WIREGUARD_PEERS"}}
+{{ $baseFqdn := env "BASE_FQDN"}}
+
+{{ $wireguardPeers = splitList "," $wireguardPeers}}
+
+http:
+  routers:
+    traefik:
+      entryPoints:
+        - "websecure"
+      rule: Host(`traefik.{{ $baseFqdn }}`)
+      service: api@internal
+    auth:
+      entryPoints:
+        - "websecure"
+      rule: Host(`auth.{{ $baseFqdn }}`)
+      service: auth
+  services:
+    auth:
+      loadBalancer:
+        servers:
+          - url: "http://traefik-forward-auth:4181"
+  middlewares:
+    google-auth:
+      forwardAuth:
+        address: "http://traefik-forward-auth:4181"
+        trustForwardHeader: true
+        authResponseHeaders: "X-Forwarded-User"
+tcp:
+  routers: {{range $wireguardPeers }}
+    traefik-router-{{ . }}:
+      entrypoints:
+        - "websecure"
+      rule: HostSNIRegexp(`{subdomain:[a-z]+}.{{ . }}.{{ $baseFqdn }}`)
+      tls:
+        passthrough: true
+      service: service-traefik-{{ . }}
+    {{end}}
+  services: {{range $wireguardPeers }}
+    service-traefik-{{ . }}:
+      loadBalancer:
+        servers:
+          - address: traefik-{{ . }}:443
+    {{end}}
+
