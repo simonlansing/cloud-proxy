@@ -37,8 +37,8 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls.certresolver=lets-encrypt
-      - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN}
-      - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN}
+      - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
       # TLS configuration
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge.provider=cloudflare
@@ -55,17 +55,36 @@ services:
       - --log.filepath=/data/logs/traefik.log
       - --log.level=DEBUG
       - --log.format=json
-    expose:
-      - 80
-      - 443
-    network_mode: host
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - proxy-net
     env_file:
       - .env
-    volumes:  
+    volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik/:/data/
       - letsencrypt-certs:/letsencrypt
 
+  traefik-forward-auth:
+    image: thomseddon/traefik-forward-auth:latest
+    container_name: traefik-forward-auth
+    environment:
+      - PROVIDERS_GOOGLE_CLIENT_ID=${AUTH_CLIENT_ID-exampleId.apps.googleusercontent.com}
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=${AUTH_CLIENT_SECRET-exampleClientSecret}
+      - SECRET=${AUTH_SECRET-exampleSecret}
+      - AUTH_HOST=auth.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - COOKIE_DOMAIN=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - URL_PATH=/_oauth
+      - LOG_LEVEL=debug
+    networks:
+      - proxy-net
+
 volumes:
   letsencrypt-certs:
+
+networks:
+  proxy-net:
+    name: proxy-net
 
