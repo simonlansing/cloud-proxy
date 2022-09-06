@@ -61,6 +61,9 @@ Create an .env file in folder onsite with following content. `SERVER_CONFIG` is 
 BASE_FQDN=example.com
 BASE_FQDN_PREFIX=peer0
 SERVER_CONFIG=traefik,api@internal,true%home,http://192.168.20.10:8123,false%printer,http://192.168.10.12,true%proxmox,https://192.168.0.10:8006,true%opnsense,https://192.168.10.1,true%synology,https://192.168.10.11:5551,true%adguard,http://192.168.0.1:3000,true%unifi,https://192.168.10.10:8443,true
+AUTH_CLIENT_ID=<exampleId>.apps.googleusercontent.com
+AUTH_CLIENT_SECRET=<exampleClientSecret>
+AUTH_SECRET=<exampleSecret>
 CLOUDFLARE_DNS_API_TOKEN=<cloudflareDnsApiToken>
 CLOUDFLARE_ZONE_API_TOKEN=<cloudflareZoneApiToken>
 TRAEFIK_CERTIFICATESRESOLVERS_CFRESOLVER_ACME_EMAIL=<acmeEmail>
