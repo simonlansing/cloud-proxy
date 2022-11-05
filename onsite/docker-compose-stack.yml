@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - SERVERURL=wireguard.${BASE_FQDN-example.com}
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=10.0.0.0
+      - ALLOWEDIPS=10.0.0.0/24
+      - LOG_CONFS=true
+    volumes:
+      - ./wireguard:/config
+      - /lib/modules:/lib/modules
+    network_mode: host
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      # Docker configuration
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.file.directory=/data
+      # Configure entrypoint
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls.certresolver=lets-encrypt
+      - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      # TLS configuration
+      - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
+      - --certificatesresolvers.lets-encrypt.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.lets-encrypt.acme.storage=/letsencrypt/acme.json
+      # Enable dashboard
+      - --api.dashboard=true
+      # Access logs
+      - --accesslog=true
+      - --accesslog.filepath=/data/logs/access.log
+      - --accesslog.bufferingsize=100
+      - --accesslog.format=json
+      # Traefik logs
+      - --log=true
+      - --log.filepath=/data/logs/traefik.log
+      - --log.level=DEBUG
+      - --log.format=json
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - proxy-net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/:/data/
+      - letsencrypt-certs:/letsencrypt
+
+  traefik-forward-auth:
+    image: thomseddon/traefik-forward-auth:latest
+    container_name: traefik-forward-auth
+    restart: unless-stopped
+    environment:
+      - PROVIDERS_GOOGLE_CLIENT_ID=${AUTH_CLIENT_ID-exampleId.apps.googleusercontent.com}
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=${AUTH_CLIENT_SECRET-exampleClientSecret}
+      - SECRET=${AUTH_SECRET-exampleSecret}
+      - AUTH_HOST=auth.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - COOKIE_DOMAIN=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - URL_PATH=/_oauth
+      - LOG_LEVEL=debug
+    networks:
+      - proxy-net
+
+volumes:
+  letsencrypt-certs:
+
+networks:
+  proxy-net:
+    name: proxy-net
