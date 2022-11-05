@@ -47,14 +47,9 @@ services:
       - --api.dashboard=true
       # Access logs
       - --accesslog=true
-      - --accesslog.filepath=/data/logs/access.log
-      - --accesslog.bufferingsize=100
-      - --accesslog.format=json
       # Traefik logs
       - --log=true
-      - --log.filepath=/data/logs/traefik.log
       - --log.level=DEBUG
-      - --log.format=json
     ports:
       - 80:80
       - 443:443
