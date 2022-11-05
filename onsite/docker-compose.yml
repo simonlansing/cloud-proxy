@@ -70,6 +70,7 @@ services:
   traefik-forward-auth:
     image: thomseddon/traefik-forward-auth:latest
     container_name: traefik-forward-auth
+    restart: unless-stopped
     environment:
       - PROVIDERS_GOOGLE_CLIENT_ID=${AUTH_CLIENT_ID-exampleId.apps.googleusercontent.com}
       - PROVIDERS_GOOGLE_CLIENT_SECRET=${AUTH_CLIENT_SECRET-exampleClientSecret}
