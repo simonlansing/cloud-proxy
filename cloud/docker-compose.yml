@@ -90,7 +90,7 @@ services:
       - SECRET=${AUTH_SECRET-exampleSecret}
       - AUTH_HOST=auth.${BASE_FQDN-example.com}
       - COOKIE_DOMAIN=${BASE_FQDN-example.com}
-      - WHITELIST={$WHITELIST}
+      - WHITELIST=${WHITELIST}
       - URL_PATH=/_oauth
       - LOG_LEVEL=debug
     networks:
