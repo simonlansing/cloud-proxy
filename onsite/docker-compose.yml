@@ -55,10 +55,11 @@ services:
       - --log.filepath=/data/logs/traefik.log
       - --log.level=DEBUG
       - --log.format=json
-    expose:
-      - 80
-      - 443
-    network_mode: host
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - proxy-net
     env_file:
       - .env
     volumes:  
@@ -66,6 +67,23 @@ services:
       - ./traefik/:/data/
       - letsencrypt-certs:/letsencrypt
 
+  traefik-forward-auth:
+    image: thomseddon/traefik-forward-auth:2.2.0-arm64
+    container_name: traefik-forward-auth
+    environment:
+      - PROVIDERS_GOOGLE_CLIENT_ID=${AUTH_CLIENT_ID-exampleId.apps.googleusercontent.com}
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=${AUTH_CLIENT_SECRET-exampleClientSecret}
+      - SECRET=${AUTH_SECRET-exampleSecret}
+      - AUTH_HOST=auth.${BASE_FQDN-example.com}
+      - COOKIE_DOMAIN=${BASE_FQDN-example.com}
+      - URL_PATH=/_oauth
+      - LOG_LEVEL=debug
+    networks:
+      - proxy-net
+
 volumes:
   letsencrypt-certs:
 
+networks:
+  proxy-net:
+    name: proxy-net
