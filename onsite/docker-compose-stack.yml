@@ -18,7 +18,7 @@ services:
       - ALLOWEDIPS=10.0.0.0/24
       - LOG_CONFS=true
     volumes:
-      - ./wireguard:/config
+      - wireguard:/config
       - /lib/modules:/lib/modules
     network_mode: host
 
@@ -62,7 +62,7 @@ services:
       - proxy-net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik/:/data/
+      - traefik:/data/
       - letsencrypt-certs:/letsencrypt
 
   traefik-forward-auth:
@@ -81,6 +81,8 @@ services:
       - proxy-net
 
 volumes:
+  wireguard:
+  traefik:
   letsencrypt-certs:
 
 networks:
