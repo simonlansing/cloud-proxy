@@ -42,7 +42,11 @@ services:
       - --entrypoints.websecure.http.tls.certresolver=lets-encrypt
       - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN-example.com}
-      - --entrypoints.websecure.http.middlewares=google-auth
+      - --entrypoints.websecure.http.tls.domains[1].main=${BASE_FQDN_PREFIX_VRE-peer0}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[1].sans=*.${BASE_FQDN_PREFIX_VRE-peer0}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[2].main=${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[2].sans=*.${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
+#      - --entrypoints.websecure.http.middlewares=google-auth
       # TLS configuration
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge.provider=cloudflare
@@ -79,6 +83,7 @@ services:
   traefik-forward-auth:
     image: thomseddon/traefik-forward-auth:2.2.0-arm64
     container_name: traefik-forward-auth
+    restart: unless-stopped
     environment:
       - PROVIDERS_GOOGLE_CLIENT_ID=${AUTH_CLIENT_ID-exampleId.apps.googleusercontent.com}
       - PROVIDERS_GOOGLE_CLIENT_SECRET=${AUTH_CLIENT_SECRET-exampleClientSecret}

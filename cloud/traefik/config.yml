@@ -1,25 +1,32 @@
-{{ $wireguardPeers := env "WIREGUARD_PEERS"}}
+{{ $serverConfig := env "SERVER_CONFIG"}}
+{{ $traefikPeers := env "TRAEFIK_PEERS"}}
 {{ $baseFqdn := env "BASE_FQDN"}}
 
-{{ $wireguardPeers = splitList "," $wireguardPeers}}
+{{ $traefikPeers = splitList "," $traefikPeers}}
+{{ $serverConfig = splitList "%" $serverConfig}}
 
 http:
-  routers:
-    traefik:
+  routers: {{range $serverConfig }}
+    {{ $server := splitn "," 3 .}}
+    router-{{ $server._0 }}:
       entryPoints:
-        - "websecure"
-      rule: Host(`traefik.{{ $baseFqdn }}`)
-      service: api@internal
-    auth:
-      entryPoints:
-        - "websecure"
-      rule: Host(`auth.{{ $baseFqdn }}`)
-      service: auth
-  services:
-    auth:
+        - websecure
+      rule: "Host(`{{ $server._0 }}.{{ $baseFqdn }}`)"
+      {{ if ne $server._2 "false"}}middlewares: google-auth{{ end }}
+      service: {{ if contains "http" $server._1 }}service-{{ $server._0 }}{{ else }}{{ $server._1 }}{{ end }}
+  {{end}}
+  
+  services: {{range $serverConfig }}
+    {{ $server := splitn "," 3 .}}
+    {{if contains "http" $server._1}}
+    service-{{ $server._0 }}:
       loadBalancer:
+        {{ if contains "https://" $server._1 }}serversTransport: insecureTransport{{ end }}
         servers:
-          - url: "http://traefik-forward-auth:4181"
+          - url: {{ $server._1 }}
+        passHostHeader: true
+    {{end}}
+  {{end}}
   middlewares:
     google-auth:
       forwardAuth:
@@ -27,7 +34,7 @@ http:
         trustForwardHeader: true
         authResponseHeaders: "X-Forwarded-User"
 tcp:
-  routers: {{range $wireguardPeers }}
+  routers: {{range $traefikPeers }}
     traefik-router-{{ . }}:
       entrypoints:
         - "websecure"
@@ -36,7 +43,7 @@ tcp:
         passthrough: true
       service: service-traefik-{{ . }}
     {{end}}
-  services: {{range $wireguardPeers }}
+  services: {{range $traefikPeers }}
     service-traefik-{{ . }}:
       loadBalancer:
         servers:
