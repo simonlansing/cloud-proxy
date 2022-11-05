@@ -30,7 +30,7 @@ http:
   middlewares:
     google-auth:
       forwardAuth:
-        address: "https://auth.{{ $baseFqdn }}"
+        address: "http://traefik-forward-auth:4181"
         trustForwardHeader: true
         authResponseHeaders: "X-Forwarded-User"
         tls:
