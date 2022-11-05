@@ -88,7 +88,3 @@ volumes:
 networks:
   proxy-net:
     name: proxy-net
-<<<<<<< HEAD
-=======
-
->>>>>>> 1181af03152d52b6a90d3d8106bfe88617694f9f
