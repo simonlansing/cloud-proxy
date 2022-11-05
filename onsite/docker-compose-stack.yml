@@ -77,6 +77,7 @@ services:
       - SECRET=${AUTH_SECRET-exampleSecret}
       - AUTH_HOST=auth.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
       - COOKIE_DOMAIN=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - WHITELIST={$WHITELIST}
       - URL_PATH=/_oauth
       - LOG_LEVEL=debug
     networks:
