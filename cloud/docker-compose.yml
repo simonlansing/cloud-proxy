@@ -19,7 +19,7 @@ services:
       - ALLOWEDIPS=0.0.0.0/0
       - LOG_CONFS=true
     volumes:
-      - ./wireguard:/config
+      - wireguard-config:/config
       - /lib/modules:/lib/modules
     expose:
        - 51820/udp
@@ -55,14 +55,9 @@ services:
       - --api.dashboard=true
       # Access logs
       - --accesslog=true
-      - --accesslog.filepath=/data/logs/access.log
-      - --accesslog.bufferingsize=100
-      - --accesslog.format=json
       # Traefik logs
       - --log=true
-      - --log.filepath=/data/logs/traefik.log
-      - --log.level=DEBUG
-      - --log.format=json
+      - --log.format=DEBUG
     ports:
       - 80:80
       - 443:443
@@ -73,11 +68,16 @@ services:
       - ${TRAEFIK_DNS_MAP_1-traefik-peer1:10.0.0.3}
       - ${TRAEFIK_DNS_MAP_2-traefik-peer2:10.0.0.4}
       - ${TRAEFIK_DNS_MAP_3-traefik-peer3:10.0.0.5}
-    env_file:
-      - .env
+    environment:
+      - SERVER_CONFIG=traefik,api@internal,true%auth,http://traefik-forward-auth:4181,true%portainer,http://portainer:9000,true%home.vre,http://10.0.0.3:8123,false%home.hag,http://10.0.0.4:8123,false
+      - TRAEFIK_PEERS=${TRAEFIK_PEERS}
+      - BASE_FQDN=${BASE_FQDN-example.com}
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+      - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+      - TRAEFIK_CERTIFICATESRESOLVERS_CFRESOLVER_ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik/:/data/
+      - traefik-config:/data/
       - letsencrypt-certs:/letsencrypt
 
   traefik-forward-auth:
@@ -97,7 +97,9 @@ services:
       - proxy-net
 
 volumes:
+  traefik-config:
   letsencrypt-certs:
+  wireguard-config:
 
 networks:
   proxy-net:
