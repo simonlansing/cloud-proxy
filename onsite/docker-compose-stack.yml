@@ -68,7 +68,7 @@ services:
       - letsencrypt-certs:/letsencrypt
 
   traefik-forward-auth:
-    image: thomseddon/traefik-forward-auth:2.2.0-arm64
+    image: thomseddon/traefik-forward-auth:${TRAEFIK_FORWARD_AUTH_IMAGE_TAG-latest}
     container_name: traefik-forward-auth
     restart: unless-stopped
     environment:
