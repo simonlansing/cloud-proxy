@@ -17,6 +17,8 @@ services:
       - INTERNAL_SUBNET=10.0.0.0
       - ALLOWEDIPS=10.0.0.0/24
       - LOG_CONFS=true
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
     volumes:
       - wireguard:/config
       - /lib/modules:/lib/modules
