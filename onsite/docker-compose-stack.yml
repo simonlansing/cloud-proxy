@@ -12,8 +12,8 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Berlin
-      - SERVERURL=wireguard.${BASE_FQDN-example.com}
-      - PEERDNS=auto
+      # - SERVERURL=wireguard.${BASE_FQDN-example.com}
+      # - PEERDNS=auto
       - INTERNAL_SUBNET=10.0.0.0
       - ALLOWEDIPS=10.0.0.0/24
       - LOG_CONFS=true
