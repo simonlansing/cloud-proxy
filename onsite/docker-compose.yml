@@ -89,3 +89,5 @@ volumes:
 networks:
   proxy-net:
     name: proxy-net
+    driver_opts:
+      com.docker.network.driver.mtu: 1392
