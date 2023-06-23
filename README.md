@@ -75,7 +75,7 @@ As with the WireGuard cloud peer, the MTU size in the WireGuard interface of the
 
 ```
 [Interface]
-MTU = 1420
+MTU = 1392
 
 [Peer]
 PersistentKeepalive = 25
