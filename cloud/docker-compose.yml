@@ -46,6 +46,8 @@ services:
       - --entrypoints.websecure.http.tls.domains[1].sans=*.${BASE_FQDN_PREFIX_VRE-peer0}${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[2].main=${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[2].sans=*.${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[3].main=${BASE_FQDN_PREFIX_DUS-peer2}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[3].sans=*.${BASE_FQDN_PREFIX_DUS-peer2}${BASE_FQDN-example.com}
 #      - --entrypoints.websecure.http.middlewares=google-auth
       # TLS configuration
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
