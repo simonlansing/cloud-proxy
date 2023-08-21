@@ -71,7 +71,7 @@ services:
       - ${TRAEFIK_DNS_MAP_2-traefik-peer2:10.0.0.4}
       - ${TRAEFIK_DNS_MAP_3-traefik-peer3:10.0.0.5}
     environment:
-      - SERVER_CONFIG=traefik,api@internal,true%auth,http://traefik-forward-auth:4181,true%portainer,http://portainer:9000,true%home.vre,http://10.0.0.3:8123,false%home.hag,http://10.0.0.4:8123,false
+      - SERVER_CONFIG=${SERVER_CONFIG}
       - TRAEFIK_PEERS=${TRAEFIK_PEERS}
       - BASE_FQDN=${BASE_FQDN-example.com}
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
