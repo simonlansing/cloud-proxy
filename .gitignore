@@ -1,8 +1,7 @@
-.env
-onsite/traefik/**
-onsite/wireguard/**
-!onsite/traefik/config.yml
-cloud/traefik/**
-cloud/wireguard/**
-!cloud/traefik/config.yml
-
+*
+.DS_Store
+!*/
+!*.*
+**/*.conf
+**/*.env
+!Makefile

@@ -19,10 +19,10 @@ services:
       - ALLOWEDIPS=0.0.0.0/0
       - LOG_CONFS=true
     volumes:
-      - wireguard-config:/config
+      - ./wireguard:/config
       - /lib/modules:/lib/modules
     expose:
-       - 51820/udp
+      - 51820/udp
     network_mode: host
 
   traefik:
@@ -46,7 +46,7 @@ services:
       - --entrypoints.websecure.http.tls.domains[1].sans=*.${BASE_FQDN_PREFIX_VRE-peer0}${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[2].main=${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[2].sans=*.${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
-#      - --entrypoints.websecure.http.middlewares=google-auth
+      #      - --entrypoints.websecure.http.middlewares=google-auth
       # TLS configuration
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge.provider=cloudflare
@@ -61,8 +61,8 @@ services:
     ports:
       - 80:80
       - 443:443
-    networks: 
-      - proxy-net 
+    networks:
+      - proxy-net
     extra_hosts:
       - ${TRAEFIK_DNS_MAP_0-traefik-peer0:10.0.0.2}
       - ${TRAEFIK_DNS_MAP_1-traefik-peer1:10.0.0.3}
@@ -77,11 +77,11 @@ services:
       - TRAEFIK_CERTIFICATESRESOLVERS_CFRESOLVER_ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - traefik-config:/data/
-      - letsencrypt-certs:/letsencrypt
+      - ./traefik:/data/
+      - ./letsencrypt:/letsencrypt
 
   traefik-forward-auth:
-    image: thomseddon/traefik-forward-auth:2.2.0-arm64
+    image: thomseddon/traefik-forward-auth:${ARCH_SPECIFIC_IMAGE-2.2.0}
     container_name: traefik-forward-auth
     restart: unless-stopped
     environment:
@@ -95,11 +95,6 @@ services:
       - LOG_LEVEL=debug
     networks:
       - proxy-net
-
-volumes:
-  traefik-config:
-  letsencrypt-certs:
-  wireguard-config:
 
 networks:
   proxy-net:

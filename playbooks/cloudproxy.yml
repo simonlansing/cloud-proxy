@@ -1,0 +1,12 @@
+- name: Install cloudproxy
+  gather_facts: false
+  hosts: cloudproxy
+  roles:
+    - role: roles/docker
+      become: true
+      tags:
+        - docker
+    - role: roles/cloudproxy
+      become: true
+      tags:
+        - cloudproxy

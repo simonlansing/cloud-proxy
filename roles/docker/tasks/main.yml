@@ -1,0 +1,55 @@
+- name: Update the repository cache and install required packages
+  ansible.builtin.apt:
+    state: latest
+    update_cache: yes
+    pkg:
+      - ca-certificates
+      - curl
+      - gnupg
+
+- name: Add official Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Verify GPG key with fingerprint
+  apt_key:
+    id: 0EBFCD88
+    state: present
+
+- name: Get deb_arch
+  shell: dpkg --print-architecture
+  register: deb_arch
+
+- name: Get codename
+  shell: . /etc/os-release && echo "$VERSION_CODENAME"
+  register: os_codename
+
+- name: Set up the stable repository
+  apt_repository:
+    repo: deb [arch="{{ deb_arch.stdout }}" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ os_codename.stdout }} stable
+    state: present
+    update_cache: yes
+
+- name: Update the repository cache and install docker packages
+  ansible.builtin.apt:
+    state: latest
+    update_cache: yes
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+
+- name: Make sure docker is started and enabled
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Create user 'docker' with a specific uid and a primary group of 'docker'
+  ansible.builtin.user:
+    uid: 1337
+    name: docker
+    group: docker

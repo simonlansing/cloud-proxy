@@ -1,0 +1,50 @@
+- name: Create cloudproxy directories
+  file:
+    path: "{{item.path}}"
+    state: directory
+  loop:
+    - { path: /home/docker/cloudproxy/wireguard, state: directory }
+    - { path: /home/docker/cloudproxy/traefik, state: directory }
+
+- name: Copy cloudproxy files
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: docker
+    group: docker
+    mode: "0644"
+  loop:
+    - {
+        src: docker-compose.yml,
+        dest: /home/docker/cloudproxy/docker-compose.yml,
+      }
+    - {
+        src: traefik/config.yml.j2,
+        dest: /home/docker/cloudproxy/traefik/config.yml,
+      }
+
+- name: Retrieve age private key from 1password and decrypt cloudproxy.env.enc
+  set_fact:
+    cloudproxy_env: "{{ lookup('community.sops.sops', 'cloudproxy.env.enc', input_type='dotenv', output_type='dotenv') }}"
+  environment:
+    SOPS_AGE_KEY: "{{ lookup('community.general.onepassword', 'cloudproxy-age-key', field='password', vault='Private') }}"
+
+- name: Write cloudproxy.env
+  ansible.builtin.copy:
+    content: "{{ cloudproxy_env }}"
+    dest: /home/docker/cloudproxy/.env
+
+- name: Get deb_arch
+  shell: dpkg --print-architecture
+  register: deb_arch
+
+- name: Set arch in .env for ARM image
+  ansible.builtin.lineinfile:
+    path: /home/docker/cloudproxy/.env
+    line: ARCH_SPECIFIC_IMAGE=2.2.0-arm64
+  when: deb_arch.stdout == "arm64"
+
+- name: Startup cloudproxy via docker compose
+  shell:
+    chdir: /home/docker/cloudproxy/
+    cmd: "docker compose -f docker-compose.yml up -d"
