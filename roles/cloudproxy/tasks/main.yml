@@ -3,8 +3,10 @@
     path: "{{item.path}}"
     state: directory
   loop:
-    - { path: /home/docker/cloudproxy/wireguard, state: directory }
+    - { path: /home/docker/cloudproxy/wireguard/server, state: directory }
+    - { path: /home/docker/cloudproxy/wireguard/wg_confs, state: directory }
     - { path: /home/docker/cloudproxy/traefik, state: directory }
+    - { path: /home/docker/cloudproxy/letsencrypt, state: directory }
 
 - name: Copy cloudproxy files
   ansible.builtin.copy:
@@ -26,13 +28,30 @@
 - name: Retrieve age private key from 1password and decrypt cloudproxy.env.enc
   set_fact:
     cloudproxy_env: "{{ lookup('community.sops.sops', 'cloudproxy.env.enc', input_type='dotenv', output_type='dotenv') }}"
+    wg0_conf: "{{ lookup('community.sops.sops', 'wireguard/wg_confs/wg0.conf.enc', input_type='binary', output_type='binary') }}"
+    privatekey_server: "{{ lookup('community.sops.sops', 'wireguard/server/privatekey-server.enc', input_type='binary', output_type='binary') }}"
+    publickey_server: "{{ lookup('community.sops.sops', 'wireguard/server/publickey-server.enc', input_type='binary', output_type='binary') }}"
   environment:
     SOPS_AGE_KEY: "{{ lookup('community.general.onepassword', 'cloudproxy-age-key', field='password', vault='Private') }}"
 
-- name: Write cloudproxy.env
+- name: Copy config files
   ansible.builtin.copy:
-    content: "{{ cloudproxy_env }}"
-    dest: /home/docker/cloudproxy/.env
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { content: "{{ cloudproxy_env }}", dest: /home/docker/cloudproxy/.env }
+    - {
+        content: "{{ wg0_conf }}",
+        dest: /home/docker/cloudproxy/wireguard/wg_confs/wg0.conf,
+      }
+    - {
+        content: "{{ privatekey_server }}",
+        dest: /home/docker/cloudproxy/wireguard/server/privatekey-server,
+      }
+    - {
+        content: "{{ publickey_server }}",
+        dest: /home/docker/cloudproxy/wireguard/server/publickey-server,
+      }
 
 - name: Get deb_arch
   shell: dpkg --print-architecture

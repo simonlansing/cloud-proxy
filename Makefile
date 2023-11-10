@@ -27,14 +27,13 @@ endef
 
 define run_playbook
 	ansible-playbook playbooks/$(1).yml -i inventory/$(2) -bK
-		
 endef
 
 encrypt:
 	$(call sops_encrypt,yaml,inventory/dus01-sip)
-	$(call sops_encrypt,yaml,/inventory/dus02-prox)
-	$(call sops_encrypt,dotenv,/roles/cloudproxy/files/cloudproxy.env)
-	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/wg0.conf)
+	$(call sops_encrypt,yaml,inventory/dus02-prox)
+	$(call sops_encrypt,dotenv,roles/cloudproxy/files/cloudproxy.env)
+	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/wg_confs/wg0.conf)
 	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/server/privatekey-server)
 	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/server/publickey-server)
 
@@ -42,7 +41,7 @@ decrypt:
 	$(call sops_decrypt,yaml,inventory/dus01-sip)
 	$(call sops_decrypt,yaml,inventory/dus02-prox)
 	$(call sops_decrypt,dotenv,roles/cloudproxy/files/cloudproxy.env)
-	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/wg0.conf)
+	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/wg_confs/wg0.conf)
 	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/server/privatekey-server)
 	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/server/publickey-server)
 
@@ -50,7 +49,7 @@ clean:
 	$(call remove_file,inventory/dus01-sip)
 	$(call remove_file,inventory/dus02-prox)
 	$(call remove_file,roles/cloudproxy/files/cloudproxy.env)
-	$(call remove_file,roles/cloudproxy/files/wireguard/wg0.conf)
+	$(call remove_file,roles/cloudproxy/files/wireguard/wg_confs/wg0.conf)
 	$(call remove_file,roles/cloudproxy/files/wireguard/server/privatekey-server)
 	$(call remove_file,roles/cloudproxy/files/wireguard/server/publickey-server)
 
