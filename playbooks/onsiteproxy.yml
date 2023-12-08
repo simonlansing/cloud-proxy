@@ -1,0 +1,12 @@
+- name: Install onsiteproxy
+  gather_facts: false
+  hosts: onsiteproxy
+  roles:
+    - role: roles/docker
+      become: true
+      tags:
+        - docker
+    - role: roles/onsiteproxy
+      become: true
+      tags:
+        - onsiteproxy

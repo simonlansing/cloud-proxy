@@ -1,0 +1,42 @@
+{{ $serverConfig := env "SERVER_CONFIG"}}
+{{ $baseFqdn := env "BASE_FQDN"}}
+{{ $baseFqdnPrefix := env "BASE_FQDN_PREFIX"}}
+
+{{ $serverConfig = splitList "%" $serverConfig}}
+
+http:
+  routers: {{range $serverConfig }}
+    {{ $server := splitn "," 3 .}}
+    router-{{ $server._0 }}:
+      entryPoints:
+        - websecure
+      rule: "Host(`{{ $server._0 }}.{{ $baseFqdnPrefix }}.{{ $baseFqdn }}`)"
+      {{ if ne $server._2 "false"}}middlewares: google-auth{{ end }}
+      service: {{ if contains "http" $server._1 }}service-{{ $server._0 }}{{ else }}{{ $server._1 }}{{ end }}
+  {{end}}
+
+  services:{{range $serverConfig }}
+    {{ $server := splitn "," 3 .}}
+    {{if contains "http" $server._1}}
+    service-{{ $server._0 }}:
+      loadBalancer:
+        {{ if contains "https://" $server._1 }}serversTransport: insecureTransport{{ end }}
+        servers:
+          - url: {{ $server._1 }}
+        passHostHeader: true
+    {{end}}
+  {{end}}
+
+  middlewares:
+    google-auth:
+      forwardAuth:
+        address: "http://traefik-forward-auth:4181"
+        trustForwardHeader: true
+        authResponseHeaders: "X-Forwarded-User"
+        tls:
+          insecureSkipVerify: false
+
+  serversTransports:
+    insecureTransport:
+      insecureSkipVerify: true
+

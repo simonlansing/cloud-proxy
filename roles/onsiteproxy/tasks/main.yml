@@ -1,0 +1,69 @@
+- name: Create onsiteproxy directories
+  file:
+    path: "{{item.path}}"
+    state: directory
+  loop:
+    - { path: /home/docker/onsiteproxy/wireguard/server, state: directory }
+    - { path: /home/docker/onsiteproxy/wireguard/wg_confs, state: directory }
+    - { path: /home/docker/onsiteproxy/traefik, state: directory }
+    - { path: /home/docker/onsiteproxy/letsencrypt, state: directory }
+
+- name: Copy onsiteproxy files
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: docker
+    group: docker
+    mode: "0644"
+  loop:
+    - {
+        src: docker-compose.yml,
+        dest: /home/docker/onsiteproxy/docker-compose.yml,
+      }
+    - {
+        src: traefik/config.yml.j2,
+        dest: /home/docker/onsiteproxy/traefik/config.yml,
+      }
+
+- name: Retrieve age private key from 1password and decrypt onsiteproxy.env.enc
+  set_fact:
+    onsiteproxy_env: "{{ lookup('community.sops.sops', 'onsiteproxy.env.enc', input_type='dotenv', output_type='dotenv') }}"
+    wg0_conf: "{{ lookup('community.sops.sops', 'wireguard/wg_confs/wg0.conf.enc', input_type='binary', output_type='binary') }}"
+    privatekey_server: "{{ lookup('community.sops.sops', 'wireguard/server/privatekey-server.enc', input_type='binary', output_type='binary') }}"
+    publickey_server: "{{ lookup('community.sops.sops', 'wireguard/server/publickey-server.enc', input_type='binary', output_type='binary') }}"
+  environment:
+    SOPS_AGE_KEY: "{{ lookup('community.general.onepassword', 'cloudproxy-age-key', field='password', vault='Private') }}"
+
+- name: Copy config files
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { content: "{{ onsiteproxy_env }}", dest: /home/docker/onsiteproxy/.env }
+    - {
+        content: "{{ wg0_conf }}",
+        dest: /home/docker/onsiteproxy/wireguard/wg_confs/wg0.conf,
+      }
+    - {
+        content: "{{ privatekey_server }}",
+        dest: /home/docker/onsiteproxy/wireguard/server/privatekey-server,
+      }
+    - {
+        content: "{{ publickey_server }}",
+        dest: /home/docker/onsiteproxy/wireguard/server/publickey-server,
+      }
+
+- name: Get deb_arch
+  shell: dpkg --print-architecture
+  register: deb_arch
+
+- name: Set arch in .env for ARM image
+  ansible.builtin.lineinfile:
+    path: /home/docker/onsiteproxy/.env
+    line: ARCH_SPECIFIC_IMAGE=2.2.0-arm64
+  when: deb_arch.stdout == "arm64"
+
+- name: Startup onsiteproxy via docker compose
+  shell:
+    chdir: /home/docker/onsiteproxy/
+    cmd: "docker compose -f docker-compose.yml up -d"

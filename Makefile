@@ -36,6 +36,10 @@ encrypt:
 	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/wg_confs/wg0.conf)
 	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/server/privatekey-server)
 	$(call sops_encrypt,binary,roles/cloudproxy/files/wireguard/server/publickey-server)
+	$(call sops_encrypt,dotenv,roles/onsiteproxy/files/onsiteproxy.env)
+	$(call sops_encrypt,binary,roles/onsiteproxy/files/wireguard/wg_confs/wg0.conf)
+	$(call sops_encrypt,binary,roles/onsiteproxy/files/wireguard/server/privatekey-server)
+	$(call sops_encrypt,binary,roles/onsiteproxy/files/wireguard/server/publickey-server)
 
 decrypt:
 	$(call sops_decrypt,yaml,inventory/dus01-sip)
@@ -44,6 +48,10 @@ decrypt:
 	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/wg_confs/wg0.conf)
 	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/server/privatekey-server)
 	$(call sops_decrypt,binary,roles/cloudproxy/files/wireguard/server/publickey-server)
+	$(call sops_decrypt,dotenv,roles/onsiteproxy/files/onsiteproxy.env)
+	$(call sops_decrypt,binary,roles/onsiteproxy/files/wireguard/wg_confs/wg0.conf)
+	$(call sops_decrypt,binary,roles/onsiteproxy/files/wireguard/server/privatekey-server)
+	$(call sops_decrypt,binary,roles/onsiteproxy/files/wireguard/server/publickey-server)
 
 clean:
 	$(call remove_file,inventory/dus01-sip)
@@ -52,11 +60,14 @@ clean:
 	$(call remove_file,roles/cloudproxy/files/wireguard/wg_confs/wg0.conf)
 	$(call remove_file,roles/cloudproxy/files/wireguard/server/privatekey-server)
 	$(call remove_file,roles/cloudproxy/files/wireguard/server/publickey-server)
+	$(call remove_file,roles/onsiteproxy/files/onsiteproxy.env)
+	$(call remove_file,roles/onsiteproxy/files/wireguard/wg_confs/wg0.conf)
+	$(call remove_file,roles/onsiteproxy/files/wireguard/server/privatekey-server)
+	$(call remove_file,roles/onsiteproxy/files/wireguard/server/publickey-server)
 
 cloudproxy-sip:
 	$(call sops_decrypt,yaml,inventory/dus01-sip)
 	$(call run_playbook,cloudproxy,dus01-sip)
 
-cloudproxy-prox:
-	$(call sops_decrypt,yaml,inventory/dus02-prox)
-	$(call run_playbook,cloudproxy,dus02-prox)
+onsiteproxy-prox:
+	$(call run_playbook,onsiteproxy,dus02-prox)

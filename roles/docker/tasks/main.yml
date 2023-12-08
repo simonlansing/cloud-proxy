@@ -7,27 +7,26 @@
       - curl
       - gnupg
 
-- name: Add official Docker GPG key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-
-- name: Verify GPG key with fingerprint
-  apt_key:
-    id: 0EBFCD88
-    state: present
-
-- name: Get deb_arch
-  shell: dpkg --print-architecture
-  register: deb_arch
+- name: Get OS ID
+  shell: . /etc/os-release && echo "$ID"
+  register: os_id
 
 - name: Get codename
   shell: . /etc/os-release && echo "$VERSION_CODENAME"
   register: os_codename
 
+- name: Get deb_arch
+  shell: dpkg --print-architecture
+  register: deb_arch
+
+- name: Add official Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/{{ os_id.stdout }}/gpg
+    state: present
+
 - name: Set up the stable repository
   apt_repository:
-    repo: deb [arch="{{ deb_arch.stdout }}" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ os_codename.stdout }} stable
+    repo: deb https://download.docker.com/linux/{{ os_id.stdout }} {{ os_codename.stdout }} stable
     state: present
     update_cache: yes
 

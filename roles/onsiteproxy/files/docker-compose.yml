@@ -15,11 +15,13 @@ services:
       - SERVERURL=wireguard.${BASE_FQDN-example.com}
       - PEERDNS=auto
       - INTERNAL_SUBNET=10.0.0.0
-      - ALLOWEDIPS=10.0.0.0/24
+      - ALLOWEDIPS=0.0.0.0/24
       - LOG_CONFS=true
     volumes:
       - ./wireguard:/config
       - /lib/modules:/lib/modules
+    expose:
+      - 51820/udp
     network_mode: host
 
   traefik:
@@ -60,15 +62,20 @@ services:
       - 443:443
     networks:
       - proxy-net
-    env_file:
-      - .env
+    environment:
+      - BASE_FQDN=${BASE_FQDN-example.com}
+      - BASE_FQDN_PREFIX=${BASE_FQDN_PREFIX-peer0}
+      - SERVER_CONFIG=${SERVER_CONFIG-traefik,api@internal,true%home,http://192.168.10.125:8123,false}
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+      - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+      - TRAEFIK_CERTIFICATESRESOLVERS_CFRESOLVER_ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik/:/data/
-      - letsencrypt-certs:/letsencrypt
+      - ./traefik:/data/
+      - ./letsencrypt:/letsencrypt
 
   traefik-forward-auth:
-    image: thomseddon/traefik-forward-auth:latest
+    image: thomseddon/traefik-forward-auth:${ARCH_SPECIFIC_IMAGE-2.2.0}
     container_name: traefik-forward-auth
     restart: unless-stopped
     environment:
@@ -76,18 +83,13 @@ services:
       - PROVIDERS_GOOGLE_CLIENT_SECRET=${AUTH_CLIENT_SECRET-exampleClientSecret}
       - SECRET=${AUTH_SECRET-exampleSecret}
       - AUTH_HOST=auth.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
-      - COOKIE_DOMAIN=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
+      - COOKIE_DOMAIN=${BASE_FQDN-example.com}
       - WHITELIST=${WHITELIST}
       - URL_PATH=/_oauth
       - LOG_LEVEL=debug
     networks:
       - proxy-net
 
-volumes:
-  letsencrypt-certs:
-
 networks:
   proxy-net:
     name: proxy-net
-    driver_opts:
-      com.docker.network.driver.mtu: 1392
