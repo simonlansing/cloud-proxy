@@ -35,9 +35,11 @@ services:
       - --providers.file.directory=/data
       # Configure entrypoint
       - --entrypoints.web.address=:80
+      - --entrypoints.web.forwardedHeaders.trustedIPs=10.0.0.1/32
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.forwardedHeaders.trustedIPs=10.0.0.1/32
       - --entrypoints.websecure.http.tls.certresolver=lets-encrypt
       - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN_PREFIX-peer0}.${BASE_FQDN-example.com}
@@ -49,14 +51,8 @@ services:
       - --api.dashboard=true
       # Access logs
       - --accesslog=true
-      - --accesslog.filepath=/data/logs/access.log
-      - --accesslog.bufferingsize=100
-      - --accesslog.format=json
       # Traefik logs
       - --log=true
-      - --log.filepath=/data/logs/traefik.log
-      - --log.level=DEBUG
-      - --log.format=json
     ports:
       - 80:80
       - 443:443
@@ -65,7 +61,7 @@ services:
     environment:
       - BASE_FQDN=${BASE_FQDN-example.com}
       - BASE_FQDN_PREFIX=${BASE_FQDN_PREFIX-peer0}
-      - SERVER_CONFIG=${SERVER_CONFIG-traefik,api@internal,true%home,http://192.168.10.125:8123,false}
+      - SERVER_CONFIG=${SERVER_CONFIG-traefik,api@internal,true%home,http://192.168.0.42:8123,false}
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
       - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
       - TRAEFIK_CERTIFICATESRESOLVERS_CFRESOLVER_ACME_EMAIL=${ACME_EMAIL}
