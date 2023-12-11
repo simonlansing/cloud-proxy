@@ -5,17 +5,20 @@
 {{ $serverConfig = splitList "%" $serverConfig}}
 
 http:
-  routers: {{range $serverConfig }}
+  routers:
+  {{range $serverConfig }}
     {{ $server := splitn "," 3 .}}
     router-{{ $server._0 }}:
       entryPoints:
+        - web
         - websecure
       rule: "Host(`{{ $server._0 }}.{{ $baseFqdnPrefix }}.{{ $baseFqdn }}`)"
       {{ if ne $server._2 "false"}}middlewares: google-auth{{ end }}
       service: {{ if contains "http" $server._1 }}service-{{ $server._0 }}{{ else }}{{ $server._1 }}{{ end }}
   {{end}}
 
-  services:{{range $serverConfig }}
+  services:
+  {{range $serverConfig }}
     {{ $server := splitn "," 3 .}}
     {{if contains "http" $server._1}}
     service-{{ $server._0 }}:

@@ -1,12 +1,23 @@
 {{ $serverConfig := env "SERVER_CONFIG"}}
 {{ $traefikPeers := env "TRAEFIK_PEERS"}}
+{{ $traefikPeersOld := env "TRAEFIK_PEERS_OLD"}}
 {{ $baseFqdn := env "BASE_FQDN"}}
 
 {{ $traefikPeers = splitList "," $traefikPeers}}
+{{ $traefikPeersOld = splitList "," $traefikPeersOld}}
 {{ $serverConfig = splitList "%" $serverConfig}}
 
 http:
-  routers: {{range $serverConfig }}
+  routers:
+  {{range $traefikPeers }}
+    router-{{ . }}:
+      entryPoints:
+        - websecure
+      rule: "HostRegexp(`{subdomain:[a-z0-9]+}.{{ . }}.{{ $baseFqdn }}`)"
+      service: service-traefik-{{ . }}
+  {{end}}
+
+  {{range $serverConfig }}
     {{ $server := splitn "," 3 .}}
     router-{{ $server._0 }}:
       entryPoints:
@@ -15,8 +26,15 @@ http:
       {{ if ne $server._2 "false"}}middlewares: google-auth{{ end }}
       service: {{ if contains "http" $server._1 }}service-{{ $server._0 }}{{ else }}{{ $server._1 }}{{ end }}
   {{end}}
-  
-  services: {{range $serverConfig }}
+
+  services:
+  {{range $traefikPeers }}
+    service-traefik-{{ . }}:
+      loadBalancer:
+        servers:
+          - url: http://traefik-{{ . }}/
+  {{end}}
+  {{range $serverConfig }}
     {{ $server := splitn "," 3 .}}
     {{if contains "http" $server._1}}
     service-{{ $server._0 }}:
@@ -24,9 +42,9 @@ http:
         {{ if contains "https://" $server._1 }}serversTransport: insecureTransport{{ end }}
         servers:
           - url: {{ $server._1 }}
-        passHostHeader: true
     {{end}}
   {{end}}
+
   middlewares:
     google-auth:
       forwardAuth:
@@ -34,7 +52,7 @@ http:
         trustForwardHeader: true
         authResponseHeaders: "X-Forwarded-User"
 tcp:
-  routers: {{range $traefikPeers }}
+  routers: {{range $traefikPeersOld }}
     traefik-router-{{ . }}:
       entrypoints:
         - "websecure"
@@ -43,7 +61,7 @@ tcp:
         passthrough: true
       service: service-traefik-{{ . }}
     {{end}}
-  services: {{range $traefikPeers }}
+  services: {{range $traefikPeersOld }}
     service-traefik-{{ . }}:
       loadBalancer:
         servers:

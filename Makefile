@@ -26,7 +26,7 @@ define remove_file
 endef
 
 define run_playbook
-	ansible-playbook playbooks/$(1).yml -i inventory/$(2) -bK
+	ansible-playbook playbooks/$(1).yml -i inventory/$(2) -bK $(3)
 endef
 
 encrypt:

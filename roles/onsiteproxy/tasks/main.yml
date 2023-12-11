@@ -63,6 +63,11 @@
     line: ARCH_SPECIFIC_IMAGE=2.2.0-arm64
   when: deb_arch.stdout == "arm64"
 
+- name: Stop onsiteproxy via docker compose
+  shell:
+    chdir: /home/docker/onsiteproxy/
+    cmd: "docker compose stop"
+
 - name: Startup onsiteproxy via docker compose
   shell:
     chdir: /home/docker/onsiteproxy/

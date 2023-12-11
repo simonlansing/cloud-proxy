@@ -36,8 +36,8 @@ services:
       # Configure entrypoint
       - --entrypoints.web.address=:80
       - --entrypoints.web.forwardedHeaders.trustedIPs=10.0.0.1/32
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      #- --entrypoints.web.http.redirections.entryPoint.to=websecure
+      #- --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.forwardedHeaders.trustedIPs=10.0.0.1/32
       - --entrypoints.websecure.http.tls.certresolver=lets-encrypt

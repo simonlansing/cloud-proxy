@@ -42,11 +42,14 @@ services:
       - --entrypoints.websecure.http.tls.certresolver=lets-encrypt
       - --entrypoints.websecure.http.tls.domains[0].main=${BASE_FQDN-example.com}
       - --entrypoints.websecure.http.tls.domains[0].sans=*.${BASE_FQDN-example.com}
-      - --entrypoints.websecure.http.tls.domains[1].main=${BASE_FQDN_PREFIX_VRE-peer0}${BASE_FQDN-example.com}
-      - --entrypoints.websecure.http.tls.domains[1].sans=*.${BASE_FQDN_PREFIX_VRE-peer0}${BASE_FQDN-example.com}
-      - --entrypoints.websecure.http.tls.domains[2].main=${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
-      - --entrypoints.websecure.http.tls.domains[2].sans=*.${BASE_FQDN_PREFIX_HAG-peer1}${BASE_FQDN-example.com}
-      #      - --entrypoints.websecure.http.middlewares=google-auth
+      - --entrypoints.websecure.http.tls.domains[1].main=${BASE_FQDN_PREFIX_DUS-peer0}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[1].sans=*.${BASE_FQDN_PREFIX_DUS-peer0}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[2].main=${BASE_FQDN_PREFIX_VRE-peer1}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[2].sans=*.${BASE_FQDN_PREFIX_VRE-peer1}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[3].main=${BASE_FQDN_PREFIX_HAG-peer2}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[3].sans=*.${BASE_FQDN_PREFIX_HAG-peer2}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[4].main=${BASE_FQDN_PREFIX_AAC-peer3}${BASE_FQDN-example.com}
+      - --entrypoints.websecure.http.tls.domains[4].sans=*.${BASE_FQDN_PREFIX_AAC-peer3}${BASE_FQDN-example.com}
       # TLS configuration
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge=true
       - --certificatesresolvers.lets-encrypt.acme.dnschallenge.provider=cloudflare
@@ -71,6 +74,7 @@ services:
     environment:
       - SERVER_CONFIG=${SERVER_CONFIG}
       - TRAEFIK_PEERS=${TRAEFIK_PEERS}
+      - TRAEFIK_PEERS_OLD=${TRAEFIK_PEERS_OLD}
       - BASE_FQDN=${BASE_FQDN-example.com}
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
       - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}

@@ -63,6 +63,11 @@
     line: ARCH_SPECIFIC_IMAGE=2.2.0-arm64
   when: deb_arch.stdout == "arm64"
 
+- name: Stop cloudproxy via docker compose
+  shell:
+    chdir: /home/docker/cloudproxy/
+    cmd: "docker compose stop"
+
 - name: Startup cloudproxy via docker compose
   shell:
     chdir: /home/docker/cloudproxy/
